@@ -5,10 +5,11 @@ from datetime import datetime, timezone
 from app.mocks import scenarios
 from app.models.ai import UserPreferences
 from app.models.weather import AirQuality, ForecastBundle, Location
-from app.providers import open_meteo
+from app.providers import metar, open_meteo
 from app.providers.http import ProviderError
 from app.services import insight_engine as ie
 from app.services import normalize as nz
+from app.services.observations import apply_observation
 
 
 def _air_quality_from(raw: dict | None) -> AirQuality | None:
@@ -28,24 +29,36 @@ async def get_air_quality(lat: float, lon: float) -> AirQuality | None:
         return None
 
 
-async def get_raw(lat: float, lon: float, scenario: str | None) -> tuple[dict, dict | None, str]:
-    """Returns (forecast payload, air-quality payload, source)."""
+async def get_raw(lat: float, lon: float, scenario: str | None) -> tuple[dict, dict | None, dict | None, str]:
+    """Returns (forecast payload, air-quality payload, nearest station observation, source)."""
     if scenario:
-        return scenarios.build_payload(scenario), scenarios.DEMO_AIR_QUALITY, "demo"
-    fc, aq = await asyncio.gather(open_meteo.forecast(lat, lon), open_meteo.air_quality(lat, lon),
-                                  return_exceptions=True)
+        return scenarios.build_payload(scenario), scenarios.DEMO_AIR_QUALITY, None, "demo"
+    fc, aq, obs = await asyncio.gather(open_meteo.forecast(lat, lon), open_meteo.air_quality(lat, lon),
+                                       metar.nearest_recent(lat, lon), return_exceptions=True)
     if isinstance(fc, BaseException):
         raise fc
-    return fc, (None if isinstance(aq, BaseException) else aq), "open-meteo"
+    return (fc, None if isinstance(aq, BaseException) else aq,
+            None if isinstance(obs, BaseException) else obs, "open-meteo")
 
 
 def build_bundle(raw: dict, aq_raw: dict | None, source: str, location: Location,
-                 prefs: UserPreferences | None = None) -> ForecastBundle:
+                 prefs: UserPreferences | None = None, obs: dict | None = None) -> ForecastBundle:
     current = nz.current_from(raw)
+    if obs:
+        current = apply_observation(current, obs, nz.near_sun_edge(current.time, nz._sun_table(raw.get("daily", {}))))
     hourly_all = nz.hourly_from(raw)
     daily = nz.daily_from(raw)
     aq = _air_quality_from(aq_raw)
     hourly = nz.hours_from_now(hourly_all, current.time, 48)
+    if current.observation and hourly:
+        # The "Now" slot must agree with what was measured, not the model.
+        hourly[0] = hourly[0].model_copy(update={
+            "temperature": current.temperature, "feels_like": current.feels_like, "humidity": current.humidity,
+            "dew_point": current.dew_point, "wind_speed": current.wind_speed, "wind_direction": current.wind_direction,
+            "visibility_km": current.visibility_km, "cloud_cover": current.cloud_cover, "pressure": current.pressure,
+            "condition": current.condition, "condition_label": current.condition_label,
+            "weather_code": current.weather_code, "scene": current.scene,
+        })
     window = ie.day_window(hourly, current.time)
     today = daily[0] if daily else None
 
@@ -73,11 +86,11 @@ def build_bundle(raw: dict, aq_raw: dict | None, source: str, location: Location
 async def get_bundle(lat: float, lon: float, name: str | None = None, country: str | None = None,
                      admin1: str | None = None, scenario: str | None = None,
                      prefs: UserPreferences | None = None) -> ForecastBundle:
-    raw, aq_raw, source = await get_raw(lat, lon, scenario)
+    raw, aq_raw, obs, source = await get_raw(lat, lon, scenario)
     if scenario:
         d = scenarios.DHAKA
         location = Location(name=d["name"], country=d["country"], admin1=d["admin1"], latitude=d["latitude"],
                             longitude=d["longitude"], timezone=d["timezone"], utc_offset_seconds=d["utc_offset_seconds"])
     else:
         location = nz.location_from(raw, name, country, admin1)
-    return build_bundle(raw, aq_raw, source, location, prefs)
+    return build_bundle(raw, aq_raw, source, location, prefs, obs)
