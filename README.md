@@ -41,10 +41,29 @@ any city in the world works.
 
 ---
 
+## Accuracy: measured, not just modelled
+
+Forecast models smooth over local effects — Dhaka's haze, calm nights, sea breezes. So for **"right now"**, WeatherLens
+uses the nearest real weather station: it pulls METAR reports from the NOAA Aviation Weather Center (free, keyless,
+updated every 30–60 min) and, when a station is within 35 km and reported in the last 90 minutes, its **measured**
+temperature, dew point, wind, pressure, visibility and present weather (haze, mist, rain, thunderstorm) replace the
+model's values. Humidity and feels-like are recomputed from the measurements. The forecast hours still come from
+Open-Meteo. The UI always says which source you're looking at ("Measured at Dhaka/Shahjalal Intl (VGHS), 0.4 km away ·
+11 min ago").
+
+| Bimanbandar, 1 AM | Phone weather app | WeatherLens (station) | Model only |
+|---|---|---|---|
+| Visibility | 3.50 km | **3.50 km · haze** | 10.4 km |
+| Wind | 0 km/h | **Calm** | 5.3 km/h |
+| Dew point | 25° | **25°** | 23.6° |
+| Humidity | 81% | **79%** | 73% |
+| Pressure | 1009.8 | **1010** | 1009.7 |
+
 ## Features
 
 | | Feature | What it does |
 |---|---|---|
+| 🏠 | **Everything on the first screen** | Opening the app shows your weather immediately (your location on first visit, Dhaka as fallback): scene, temperature, a details grid (UV, humidity vs yesterday, wind compass, dew point, pressure gauge & trend, visibility, air quality, sunrise/sunset), next 24 hours, what to carry/wear, rain nowcast, 7 days and an ask box. |
 | 🌆 | **Dynamic weather worlds** | Procedural illustrated skyline (Dhaka gets Kahn's Parliament + a mosque) in 8 worlds — sunny, cloudy, rain, storm, night, sunset, snow, fog. Canvas rain with wind slant and street splashes, lightning, fireflies, drifting clouds, parallax, reflections. Cloud cover veils the sun/moon. |
 | ✨ | **What does today's weather mean for you?** | What to take · what to wear · travel · outdoors, each item citing the number behind it. |
 | 👤 | **Personalized insights** | Home, work/university, commute times, favourite activities → *"Cycling conditions are poor today because rain probability reaches 79% around 5 PM."* |
@@ -56,7 +75,7 @@ any city in the world works.
 | 🗺️ | **Radar** | Leaflet map with animated RainViewer radar + temperature / wind / clouds / UV / air-quality layers sampled from the backend. |
 | 🤖 | **Ask WeatherLens** | Chat assistant. Uses Claude when `ANTHROPIC_API_KEY` is set; otherwise a deterministic, data-grounded rule engine. Every answer shows the data it was grounded on. |
 | 🌍 | **City explorer + Compare** | Scene cards for Dhaka, Chittagong, Rajshahi, London, Tokyo, New York, Sydney, Melbourne; any city via search; side-by-side comparison. |
-| 🎞️ | **Demo mode** | One click to flip Dhaka through Sunny / Cloudy / Rain / Storm / Sunset / Night with consistent synthetic data. |
+| 🎞️ | **Demo mode** | In Settings (or via a link like `/?demo=rain`): flip Dhaka through Sunny / Cloudy / Rain / Storm / Sunset / Night with consistent synthetic data. |
 | 🌙 | **Dark mode, reduced motion, a11y** | Theme-aware tokens, `prefers-reduced-motion` stops all loops, keyboard-navigable listboxes, ARIA labels, visible focus, text labels beside every color. |
 | 🔈 | **Rain ambience** | Optional generated rain sound (Web Audio, no files). Off by default. |
 
@@ -64,7 +83,7 @@ any city in the world works.
 
 **Frontend** — React 19 · TypeScript (strict) · Vite · Tailwind CSS v4 · Motion (Framer Motion) · Lucide · Leaflet
 **Backend** — Python 3.12 · FastAPI · Pydantic v2 · httpx · Anthropic SDK
-**Data** — Open-Meteo (forecast, geocoding, air quality) · OSRM (routing) · Nominatim (place names) · RainViewer (radar tiles) · Esri Canvas basemaps — all free and keyless.
+**Data** — Open-Meteo (forecast, geocoding, air quality) · NOAA Aviation Weather Center METAR (live station observations) · OSRM (routing) · Nominatim (place names) · RainViewer (radar tiles) · Esri Canvas basemaps — all free and keyless.
 
 ## Architecture
 
@@ -111,6 +130,7 @@ uvicorn app.main:app --reload --port 8000     # API docs: http://localhost:8000/
 cd frontend
 npm install
 npm run dev                                    # http://localhost:5173  (proxies /api → :8000)
+# Pages: /  (weather home) · /forecast · /radar · /routes · /assistant · /explore · /settings · /about
 ```
 
 Optional: copy `.env.example` to `backend/.env` and set `ANTHROPIC_API_KEY` to enable Claude answers.
@@ -170,5 +190,6 @@ See [`PLAN.md`](PLAN.md) for the full folder map and the build checklist.
 ## Credits
 
 Weather data by [Open-Meteo](https://open-meteo.com) (CC BY 4.0) · Routing by [OSRM](https://project-osrm.org) ·
+Observations from the [NOAA Aviation Weather Center](https://aviationweather.gov) ·
 Geodata © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors · Radar by
 [RainViewer](https://www.rainviewer.com) · Basemaps © Esri.

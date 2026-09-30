@@ -187,3 +187,13 @@ cd frontend && npm install && npm run dev   # http://localhost:5173 (proxies /ap
   fixed canvas particle crash (negative frame delta froze rain). ALL PLANNED TASKS COMPLETE.
   Next ideas (optional): pytest suite for insight_engine, Playwright visual tests per weather world, screenshots in docs/screenshots/,
   git init + first commit, deploy (frontend static host + backend container).
+
+### Iteration 2 — accuracy + compact home (2026-10-01)
+- [x] Live station observations (METAR, `backend/app/providers/metar.py` + `services/observations.py`) override model "now"
+- [x] New fields: dew point, pressure trend (3 h), humidity vs yesterday (`past_days=1`), `haze` condition
+- [x] "/" is now the weather home; marketing page moved to `/about`; `/app/*` redirects
+- [x] Nav trimmed to Today · Forecast · Map · Routes · Ask AI; Explore via location search; Demo moved to Settings
+- [x] Box-style details grid (`components/WeatherDetails.tsx`) modelled on the phone app screenshot
+- [x] Compact `TodayAdvice` + `AskBox` replace the big insight panel and quick-action row
+- [x] First visit auto-detects the user's location (fallback Dhaka)
+- NOTE: never add Claude attribution to commits (user requirement).
