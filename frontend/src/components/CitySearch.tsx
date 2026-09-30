@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { Clock, Loader2, LocateFixed, MapPin, Search, X } from "lucide-react";
+import { ArrowRight, Clock, Loader2, LocateFixed, MapPin, Search, X } from "lucide-react";
 import type { Place } from "@/types/weather";
 import { reverseGeocode, searchPlaces } from "@/services/weatherApi";
 import { ApiError } from "@/services/http";
@@ -141,6 +142,10 @@ export function CitySearch({ open, onClose, onSelect, title = "Choose a location
                 </>
               )}
             </div>
+            <Link to="/explore" onClick={onClose}
+              className="flex items-center justify-between border-t border-line px-5 py-3.5 text-sm font-semibold text-ink-soft hover:bg-sunken hover:text-ink">
+              Explore & compare cities <ArrowRight size={16} aria-hidden="true" />
+            </Link>
           </motion.div>
         </motion.div>
       )}

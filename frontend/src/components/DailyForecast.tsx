@@ -26,7 +26,7 @@ export function DailyForecast({ days, loading, title = "7-day forecast", onSelec
             const rain = d.precipitation_probability_max ?? 0;
             const Row = onSelect ? "button" : "div";
             return (
-              <motion.li key={d.date} initial={{ opacity: 0, x: -8 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
+              <motion.li key={d.date} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.04, duration: 0.4 }}>
                 <Row {...(onSelect ? { onClick: () => onSelect(d), "aria-pressed": selected === d.date } : {})}
                   className={`grid w-full grid-cols-[3.4rem_2.4rem_3.2rem_2.2rem_1fr_2.2rem] items-center gap-2 py-2.5 text-left sm:grid-cols-[4.5rem_2.6rem_4rem_2.4rem_1fr_2.4rem] ${

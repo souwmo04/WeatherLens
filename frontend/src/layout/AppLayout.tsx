@@ -1,7 +1,6 @@
 import { Suspense, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { DemoSwitcher } from "@/components/DemoSwitcher";
 import { CloudLoader } from "@/components/ui/States";
 import { useForecast } from "@/hooks/useWeather";
 import { useRainAmbience } from "@/hooks/useRainAmbience";
@@ -15,7 +14,7 @@ export function AppLayout() {
   const { resolvedTheme, sound } = useApp();
   const forecast = useForecast();
   const scene = forecast.data?.current.scene;
-  const onScene = pathname === "/app" || pathname === "/app/";
+  const onScene = pathname === "/";
   useRainAmbience(sound && (scene === "rain" || scene === "storm"), scene === "storm");
 
   // The weather tints the whole interface through a single accent token.
@@ -41,7 +40,6 @@ export function AppLayout() {
           </Suspense>
         </motion.main>
       </AnimatePresence>
-      <DemoSwitcher />
       <MobileNavigation />
     </div>
   );

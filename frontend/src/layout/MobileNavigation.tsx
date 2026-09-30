@@ -2,11 +2,11 @@ import { NavLink } from "react-router-dom";
 import { CalendarDays, Home, Radar, Route, Sparkles } from "lucide-react";
 
 const ITEMS = [
-  { to: "/app", label: "Home", icon: Home, end: true },
-  { to: "/app/forecast", label: "Forecast", icon: CalendarDays },
-  { to: "/app/radar", label: "Radar", icon: Radar },
-  { to: "/app/routes", label: "Routes", icon: Route },
-  { to: "/app/assistant", label: "AI", icon: Sparkles },
+  { to: "/", label: "Today", icon: Home, end: true },
+  { to: "/forecast", label: "Forecast", icon: CalendarDays },
+  { to: "/radar", label: "Map", icon: Radar },
+  { to: "/routes", label: "Routes", icon: Route },
+  { to: "/assistant", label: "Ask AI", icon: Sparkles },
 ];
 
 /** Bottom tab bar for phones and small tablets. */

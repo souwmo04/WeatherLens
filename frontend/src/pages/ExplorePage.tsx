@@ -134,7 +134,7 @@ export default function ExplorePage() {
   const [picking, setPicking] = useState<0 | 1 | null>(null);
   const cities = useMemo(() => [...extra, ...FEATURED.filter((f) => !extra.some((e) => key(e) === key(f)))], [extra]);
 
-  const open = (p: Place) => { setScenario(null); setPlace(p); navigate("/app"); };
+  const open = (p: Place) => { setScenario(null); setPlace(p); navigate("/"); };
   const addToCompare = (p: Place) => setCompare(([a, b]) => (key(a) === key(p) ? [a, b] : b && key(b) === key(p) ? [a, b] : [a, p]));
 
   return (

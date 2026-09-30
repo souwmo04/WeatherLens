@@ -36,7 +36,8 @@ export function iconFor(condition: Condition, isDay = true): IconKind {
     case "mostly_clear":
     case "partly_cloudy": return isDay ? "sun-cloud" : "moon-cloud";
     case "cloudy": return "cloud";
-    case "fog": return "fog";
+    case "fog":
+    case "haze": return "fog";
     case "drizzle": return "drizzle";
     case "rain": return "rain";
     case "heavy_rain": return "heavy-rain";

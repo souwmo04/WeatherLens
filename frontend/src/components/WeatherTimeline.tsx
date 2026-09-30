@@ -133,7 +133,7 @@ export function WeatherTimeline({ hours, loading, title = "Next 24 hours", count
                   </div>
                   <div className="flex items-center gap-1.5 text-ink-soft"><Thermometer size={15} aria-hidden="true" /><dt>Feels</dt><dd className="num font-semibold text-ink">{fmtTemp(sel.feels_like)}</dd></div>
                   <div className="flex items-center gap-1.5 text-ink-soft"><CloudRain size={15} aria-hidden="true" /><dt>Rain</dt><dd className="num font-semibold text-ink">{fmtPct(sel.precipitation_probability)}{sel.precipitation ? ` · ${sel.precipitation} mm` : ""}</dd></div>
-                  <div className="flex items-center gap-1.5 text-ink-soft"><Wind size={15} aria-hidden="true" /><dt>Wind</dt><dd className="num font-semibold text-ink">{fmtWind(sel.wind_speed)} {compassPoint(sel.wind_direction)}</dd></div>
+                  <div className="flex items-center gap-1.5 text-ink-soft"><Wind size={15} aria-hidden="true" /><dt>Wind</dt><dd className="num font-semibold text-ink">{(sel.wind_speed ?? 0) < 2 ? "Calm" : `${fmtWind(sel.wind_speed)} ${compassPoint(sel.wind_direction)}`}</dd></div>
                   <div className="flex items-center gap-1.5 text-ink-soft"><Droplets size={15} aria-hidden="true" /><dt>Humidity</dt><dd className="num font-semibold text-ink">{fmtPct(sel.humidity)}</dd></div>
                 </motion.dl>
               )}

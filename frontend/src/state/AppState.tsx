@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { DemoScenario, Place, Preferences } from "@/types/weather";
+import { reverseGeocode } from "@/services/weatherApi";
 
 export type ThemePref = "system" | "light" | "dark";
 
@@ -28,6 +29,7 @@ interface AppState {
   setPersonalize: (v: boolean) => void;
   sound: boolean;
   setSound: (v: boolean) => void;
+  locating: boolean;
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -62,9 +64,13 @@ function useSystemDark() {
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [place, setPlaceState] = useState<Place>(() => loadScalar("place", DHAKA));
+  const [locating, setLocating] = useState(false);
   const [recent, setRecent] = useState<Place[]>(() => loadScalar("recent", [DHAKA]));
-  // Demo mode is session-scoped on purpose: a fresh visit always shows live data.
-  const [scenario, setScenario] = useState<DemoScenario | null>(null);
+  // Demo mode is session-scoped: a fresh visit shows live data unless the URL asks for a demo (?demo=rain).
+  const [scenario, setScenario] = useState<DemoScenario | null>(() => {
+    const d = new URLSearchParams(location.search).get("demo");
+    return d && ["sunny", "cloudy", "rain", "storm", "night", "sunset"].includes(d) ? (d as DemoScenario) : null;
+  });
   const [theme, setThemeState] = useState<ThemePref>(() => loadScalar("theme", "system"));
   const [prefs, setPrefsState] = useState<Preferences>(() => load("prefs", DEFAULT_PREFS));
   const [personalize, setPersonalizeState] = useState<boolean>(() => loadScalar("personalize", true));
@@ -73,6 +79,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const resolvedTheme = theme === "system" ? (systemDark ? "dark" : "light") : theme;
 
   useEffect(() => { document.documentElement.dataset.theme = resolvedTheme; }, [resolvedTheme]);
+
+  // First visit: show the weather where the user actually is (Dhaka if location is unavailable/denied).
+  useEffect(() => {
+    let saved = false;
+    try { saved = localStorage.getItem("wl:place") != null; } catch { /* storage blocked */ }
+    if (saved || !("geolocation" in navigator)) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const c = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+        let name = "My location";
+        try { name = (await reverseGeocode(c)).name ?? name; } catch { /* keep generic */ }
+        setPlaceState({ name, ...c });
+        save("place", { name, ...c });
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { timeout: 8_000, maximumAge: 600_000 },
+    );
+  }, []);
 
   const setPlace = useCallback((p: Place) => {
     setPlaceState(p);
@@ -89,8 +115,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppState>(() => ({
     place, setPlace, recent, scenario, setScenario, theme, setTheme, resolvedTheme,
-    prefs, setPrefs, personalize, setPersonalize, sound, setSound,
-  }), [place, setPlace, recent, scenario, theme, setTheme, resolvedTheme, prefs, setPrefs, personalize, setPersonalize, sound]);
+    prefs, setPrefs, personalize, setPersonalize, sound, setSound, locating,
+  }), [place, setPlace, recent, scenario, theme, setTheme, resolvedTheme, prefs, setPrefs, personalize, setPersonalize, sound, locating]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

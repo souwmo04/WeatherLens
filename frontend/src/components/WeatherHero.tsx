@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Droplets, Eye, Gauge, Sparkles, Sun, Volume2, VolumeX, Wind } from "lucide-react";
+import { Sparkles, Volume2, VolumeX } from "lucide-react";
 import { useApp } from "@/state/AppState";
 import type { ForecastBundle, Scene } from "@/types/weather";
 import type { ApiError } from "@/services/http";
@@ -7,8 +7,7 @@ import { WeatherScene } from "./scene/WeatherScene";
 import { AnimatedNumber, Skeleton } from "./ui/primitives";
 import { ErrorState } from "./ui/States";
 import { WeatherIcon } from "./ui/WeatherIcon";
-import { aqiInfo, uvInfo } from "@/utils/weatherHelpers";
-import { compassPoint, fmtClock, fmtLongDate, fmtTemp } from "@/utils/formatters";
+import { fmtClock, fmtLongDate, fmtTemp } from "@/utils/formatters";
 
 interface Props {
   data: ForecastBundle | null;
@@ -17,21 +16,7 @@ interface Props {
   onRetry: () => void;
 }
 
-const HEIGHT = "h-[max(620px,min(92vh,820px))] sm:h-[max(640px,min(88vh,820px))]";
-
-function Stat({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
-  return (
-    <div className="flex min-w-[8.2rem] shrink-0 items-center gap-3 px-4 py-3 sm:min-w-0 sm:flex-1">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15" aria-hidden="true">{icon}</span>
-      <div className="min-w-0">
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-white/70">{label}</p>
-        <p className="num truncate text-[0.98rem] font-bold text-white">
-          {value}{sub && <span className="ml-1 text-xs font-medium text-white/70">{sub}</span>}
-        </p>
-      </div>
-    </div>
-  );
-}
+const HEIGHT = "h-[470px] sm:h-[500px] lg:h-[540px]";
 
 export function WeatherHero({ data, loading, error, onRetry }: Props) {
   const { sound, setSound } = useApp();
@@ -40,7 +25,6 @@ export function WeatherHero({ data, loading, error, onRetry }: Props) {
   const today = data?.daily[0];
   const intensity = c ? Math.min(1, (c.precipitation ?? 0) / 1.5 + (c.condition === "heavy_rain" ? 0.4 : 0.3)) : 0.5;
   const isDhaka = data?.location.name.toLowerCase().includes("dhaka") ?? true;
-  const aqi = aqiInfo(data?.air_quality?.us_aqi);
 
   return (
     <section aria-labelledby="hero-location" className="relative">
@@ -48,7 +32,7 @@ export function WeatherHero({ data, loading, error, onRetry }: Props) {
         wind={c?.wind_speed} intensity={intensity} cloudCover={c?.cloud_cover}
         className={`${HEIGHT} w-full lg:rounded-b-[2.75rem]`}
         label={c ? `Illustration: ${c.condition_label.toLowerCase()} over ${data!.location.name}` : undefined}>
-        <div className="mx-auto flex h-full max-w-[1320px] flex-col px-5 pb-6 pt-24 sm:px-8 sm:pb-8 sm:pt-32">
+        <div className="mx-auto flex h-full max-w-[1320px] flex-col px-5 pb-12 pt-24 sm:px-8 sm:pb-14 sm:pt-28">
           {error && !data ? (
             <div className="m-auto w-full max-w-md rounded-[2rem] bg-elev/95 p-2 text-ink shadow-[var(--shadow-lift)]">
               <ErrorState error={error} onRetry={onRetry} />
@@ -71,10 +55,10 @@ export function WeatherHero({ data, loading, error, onRetry }: Props) {
                       {[data.location.country, `${fmtLongDate(c.time)} · ${fmtClock(c.time)}`].filter(Boolean).join(" · ")}
                     </p>
 
-                    <div className="mt-5 flex items-start">
+                    <div className="mt-4 flex items-start">
                       <AnimatedNumber value={c.temperature}
-                        className="num text-[clamp(6.5rem,19vw,11.5rem)] font-extralight leading-[0.82] tracking-[-0.07em]" />
-                      <span className="mt-2 text-[clamp(3rem,7vw,5rem)] font-extralight leading-none">°</span>
+                        className="num text-[clamp(5.5rem,16vw,8.5rem)] font-extralight leading-[0.82] tracking-[-0.07em]" />
+                      <span className="mt-1 text-[clamp(2.6rem,6vw,4rem)] font-extralight leading-none">°</span>
                     </div>
 
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5">
@@ -98,11 +82,8 @@ export function WeatherHero({ data, loading, error, onRetry }: Props) {
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-white/85">
                     <span className="glass-on-scene rounded-full px-3 py-1.5">
-                      Mood · {data.mood.label}
-                      <span className="sr-only">: {data.mood.description}</span>
-                    </span>
-                    <span className="glass-on-scene rounded-full px-3 py-1.5">
-                      {data.source === "demo" ? "Demo data" : "Live · Open-Meteo"}
+                      {data.source === "demo" ? "Demo data"
+                        : c.observation ? `Live · measured ${c.observation.age_min} min ago` : "Live forecast"}
                     </span>
                     {(scene === "rain" || scene === "storm") && (
                       <button onClick={() => setSound(!sound)} aria-pressed={sound}
@@ -112,13 +93,6 @@ export function WeatherHero({ data, loading, error, onRetry }: Props) {
                       </button>
                     )}
                   </div>
-                  <dl className="glass-on-scene no-scrollbar -mx-1 flex overflow-x-auto rounded-[1.6rem] sm:mx-0 sm:divide-x sm:divide-white/15">
-                    <Stat icon={<Droplets size={17} />} label="Humidity" value={c.humidity != null ? `${Math.round(c.humidity)}%` : "—"} />
-                    <Stat icon={<Wind size={17} />} label="Wind" value={c.wind_speed != null ? `${Math.round(c.wind_speed)} km/h` : "—"} sub={compassPoint(c.wind_direction)} />
-                    <Stat icon={<Sun size={17} />} label="UV" value={c.uv_index != null ? `${Math.round(c.uv_index)}` : "—"} sub={uvInfo(c.uv_index)} />
-                    <Stat icon={<Eye size={17} />} label="Visibility" value={c.visibility_km != null ? `${c.visibility_km >= 10 ? Math.round(c.visibility_km) : c.visibility_km} km` : "—"} />
-                    <Stat icon={<Gauge size={17} />} label="Air quality" value={data.air_quality?.us_aqi != null ? `${Math.round(data.air_quality.us_aqi)}` : "N/A"} sub={aqi?.label} />
-                  </dl>
                 </div>
               )}
             </>

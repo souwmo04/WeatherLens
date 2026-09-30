@@ -62,7 +62,7 @@ export default function LandingPage() {
             <Logo onScene />
             <nav aria-label="Landing" className="flex items-center gap-1.5">
               <ThemeToggle onScene />
-              <Link to="/app" className="glass-on-scene inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold hover:bg-white/25">
+              <Link to="/" className="glass-on-scene inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold hover:bg-white/25">
                 Open app
               </Link>
             </nav>
@@ -81,10 +81,10 @@ export default function LandingPage() {
                 WeatherLens turns raw weather data into decisions you can actually use.
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
-                <Link to="/app" className="inline-flex h-13 items-center gap-2 rounded-full bg-white px-7 text-base font-bold text-[#0c1530] shadow-[0_10px_40px_-10px_rgb(0_0_0/0.5)] transition-transform hover:-translate-y-0.5">
+                <Link to="/" className="inline-flex h-13 items-center gap-2 rounded-full bg-white px-7 text-base font-bold text-[#0c1530] shadow-[0_10px_40px_-10px_rgb(0_0_0/0.5)] transition-transform hover:-translate-y-0.5">
                   Explore Weather <ArrowRight size={18} aria-hidden="true" />
                 </Link>
-                <Link to="/app/assistant" className="glass-on-scene inline-flex h-13 items-center gap-2 rounded-full px-7 text-base font-bold transition-colors hover:bg-white/25">
+                <Link to="/assistant" className="glass-on-scene inline-flex h-13 items-center gap-2 rounded-full px-7 text-base font-bold transition-colors hover:bg-white/25">
                   <Sparkles size={17} aria-hidden="true" /> Ask WeatherLens
                 </Link>
               </div>
@@ -146,7 +146,7 @@ export default function LandingPage() {
               <p className="mt-4 max-w-lg text-lg text-ink-soft">
                 Tell WeatherLens where you go and what you love doing. It checks the forecast at exactly those times — your commute, your class, your evening ride.
               </p>
-              <Link to="/app/settings" className="mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-ink px-6 font-semibold text-bg hover:opacity-90">
+              <Link to="/settings" className="mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-ink px-6 font-semibold text-bg hover:opacity-90">
                 Personalize <ArrowRight size={17} aria-hidden="true" />
               </Link>
             </motion.div>
@@ -204,7 +204,7 @@ export default function LandingPage() {
             <WeatherScene scene="sunset" seed="Dhaka" landmarks compact scrim={0.8} className="h-[380px]">
               <div className="scene-text flex h-full flex-col items-start justify-center gap-6 px-8 sm:px-14">
                 <h2 className="max-w-xl text-4xl font-extrabold tracking-[-0.04em] sm:text-5xl">What is the weather doing — and what should you do?</h2>
-                <Link to="/app" className="inline-flex h-13 items-center gap-2 rounded-full bg-white px-7 font-bold text-[#0c1530] hover:-translate-y-0.5">
+                <Link to="/" className="inline-flex h-13 items-center gap-2 rounded-full bg-white px-7 font-bold text-[#0c1530] hover:-translate-y-0.5">
                   Explore Weather <ArrowRight size={18} aria-hidden="true" />
                 </Link>
               </div>

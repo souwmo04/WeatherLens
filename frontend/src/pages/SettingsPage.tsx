@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Check, Volume2, VolumeX } from "lucide-react";
 import { PageFrame } from "@/layout/AppLayout";
 import { useApp, DEFAULT_PREFS, type ThemePref } from "@/state/AppState";
-import type { Preferences } from "@/types/weather";
+import type { DemoScenario, Preferences } from "@/types/weather";
+import { DEMO_SCENARIOS } from "@/utils/weatherHelpers";
+import { Link } from "react-router-dom";
 
 const ACTIVITIES = ["cycling", "running", "walking", "photography", "football", "picnic"];
 const COMMUTES: { key: Preferences["commute_mode"]; label: string }[] = [
@@ -38,7 +40,7 @@ function Segmented<T extends string>({ value, options, onChange, label }: { valu
 }
 
 export default function SettingsPage() {
-  const { prefs, setPrefs, personalize, setPersonalize, theme, setTheme, sound, setSound } = useApp();
+  const { prefs, setPrefs, personalize, setPersonalize, theme, setTheme, sound, setSound, scenario, setScenario } = useApp();
   const [draft, setDraft] = useState<Preferences>(prefs);
   const [saved, setSaved] = useState(false);
   const set = <K extends keyof Preferences>(k: K, v: Preferences[K]) => { setDraft((d) => ({ ...d, [k]: v })); setSaved(false); };
@@ -102,6 +104,16 @@ export default function SettingsPage() {
             Rain ambience {sound ? "on" : "off"}
           </button>
           <p className="text-xs text-ink-mute">A soft, generated rain sound plays only while it's raining in the scene. Off by default.</p>
+        </Section>
+
+        <Section title="Demo mode" description="Preview every weather world with sample Dhaka data. Handy for showing the app off.">
+          <Segmented<DemoScenario | "live"> label="Demo weather" value={scenario ?? "live"}
+            onChange={(v) => setScenario(v === "live" ? null : v)}
+            options={[{ key: "live", label: "Live weather" }, ...DEMO_SCENARIOS]} />
+          <p className="text-xs text-ink-mute">
+            Demo mode resets when you reload. Share a demo directly with a link like <code>?demo=rain</code>.{" "}
+            <Link to="/about" className="font-semibold text-accent hover:underline">About WeatherLens →</Link>
+          </p>
         </Section>
 
         <div className="flex flex-wrap items-center gap-3 pt-2">

@@ -2,7 +2,7 @@
 // Times are local wall-clock ISO strings for the location, e.g. "2026-10-01T14:00".
 
 export type Condition =
-  | "clear" | "mostly_clear" | "partly_cloudy" | "cloudy" | "fog" | "drizzle"
+  | "clear" | "mostly_clear" | "partly_cloudy" | "cloudy" | "haze" | "fog" | "drizzle"
   | "rain" | "heavy_rain" | "snow" | "storm";
 
 export type Scene = "sunny" | "cloudy" | "rain" | "storm" | "night" | "sunset" | "snow" | "fog";
@@ -32,6 +32,16 @@ export interface Place {
   population?: number | null;
 }
 
+export interface Observation {
+  station: string;
+  name: string | null;
+  distance_km: number;
+  age_min: number;
+  raw: string | null;
+}
+
+export type PressureTrend = "rising_fast" | "rising" | "steady" | "falling" | "falling_fast";
+
 export interface CurrentWeather {
   time: string;
   temperature: number;
@@ -44,12 +54,17 @@ export interface CurrentWeather {
   visibility_km: number | null;
   cloud_cover: number | null;
   pressure: number | null;
+  pressure_trend: PressureTrend | null;
+  pressure_change_3h: number | null;
+  dew_point: number | null;
+  humidity_yesterday: number | null;
   precipitation: number | null;
   weather_code: number;
   condition: Condition;
   condition_label: string;
   scene: Scene;
   is_day: boolean;
+  observation: Observation | null;
 }
 
 export interface HourlyPoint {
@@ -68,6 +83,8 @@ export interface HourlyPoint {
   uv_index: number | null;
   cloud_cover: number | null;
   visibility_km: number | null;
+  dew_point: number | null;
+  pressure: number | null;
   is_day: boolean;
 }
 

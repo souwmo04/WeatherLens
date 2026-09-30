@@ -6,12 +6,11 @@ import { CitySearch } from "@/components/CitySearch";
 import { useApp, useActivePlace, type ThemePref } from "@/state/AppState";
 
 export const NAV_ITEMS = [
-  { to: "/app", label: "Today", end: true },
-  { to: "/app/forecast", label: "Forecast" },
-  { to: "/app/radar", label: "Radar" },
-  { to: "/app/routes", label: "Routes" },
-  { to: "/app/explore", label: "Explore" },
-  { to: "/app/assistant", label: "AI Assistant" },
+  { to: "/", label: "Today", end: true },
+  { to: "/forecast", label: "Forecast" },
+  { to: "/radar", label: "Map" },
+  { to: "/routes", label: "Routes" },
+  { to: "/assistant", label: "Ask AI" },
 ] as const;
 
 const THEME_ORDER: ThemePref[] = ["system", "light", "dark"];
@@ -74,7 +73,7 @@ export function Navbar({ onScene }: { onScene: boolean }) {
         <div className="flex items-center gap-1">
           <LocationButton onScene={onScene} />
           <span className="hidden sm:block"><ThemeToggle onScene={onScene} /></span>
-          <NavLink to="/app/settings" aria-label="Preferences"
+          <NavLink to="/settings" aria-label="Preferences"
             className={({ isActive }) => `grid h-10 w-10 place-items-center rounded-full transition-colors ${
               onScene ? "text-white/90 hover:bg-white/15" : isActive ? "bg-sunken text-ink" : "text-ink-soft hover:bg-sunken hover:text-ink"}`}>
             <Settings size={18} aria-hidden="true" />
