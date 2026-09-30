@@ -22,6 +22,15 @@ class Location(BaseModel):
     utc_offset_seconds: int = 0
 
 
+class Observation(BaseModel):
+    """A real surface observation that replaced model values for 'right now'."""
+    station: str
+    name: str | None = None
+    distance_km: float
+    age_min: int
+    raw: str | None = None
+
+
 class CurrentWeather(BaseModel):
     time: str
     temperature: float
@@ -34,12 +43,17 @@ class CurrentWeather(BaseModel):
     visibility_km: float | None = None
     cloud_cover: float | None = None
     pressure: float | None = None
+    pressure_trend: Literal["rising_fast", "rising", "steady", "falling", "falling_fast"] | None = None
+    pressure_change_3h: float | None = None
+    dew_point: float | None = None
+    humidity_yesterday: float | None = None
     precipitation: float | None = Field(None, description="mm in the last 15 min")
     weather_code: int
     condition: Condition
     condition_label: str
     scene: Scene
     is_day: bool
+    observation: Observation | None = None
 
 
 class HourlyPoint(BaseModel):
@@ -58,6 +72,8 @@ class HourlyPoint(BaseModel):
     uv_index: float | None = None
     cloud_cover: float | None = None
     visibility_km: float | None = None
+    dew_point: float | None = None
+    pressure: float | None = None
     is_day: bool
 
 

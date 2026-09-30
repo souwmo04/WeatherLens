@@ -4,12 +4,13 @@ from app.providers.http import ProviderError, get_json
 from app.utils.cache import cache
 
 CURRENT_VARS = (
-    "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,"
+    "temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,"
     "cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,visibility"
 )
 HOURLY_VARS = (
     "temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,"
-    "wind_speed_10m,wind_direction_10m,relative_humidity_2m,uv_index,cloud_cover,visibility,is_day"
+    "wind_speed_10m,wind_direction_10m,relative_humidity_2m,uv_index,cloud_cover,visibility,is_day,"
+    "dew_point_2m,pressure_msl"
 )
 DAILY_VARS = (
     "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,"
@@ -26,7 +27,8 @@ async def forecast(lat: float, lon: float) -> dict:
     s = get_settings()
     lat, lon = _r(lat), _r(lon)
     params = {
-        "latitude": lat, "longitude": lon, "timezone": "auto", "forecast_days": 7,
+        # past_days=1 gives yesterday's hours (humidity comparison, pressure trend)
+        "latitude": lat, "longitude": lon, "timezone": "auto", "forecast_days": 7, "past_days": 1,
         "current": CURRENT_VARS, "hourly": HOURLY_VARS, "daily": DAILY_VARS,
         "wind_speed_unit": "kmh",
     }

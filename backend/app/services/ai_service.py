@@ -54,7 +54,11 @@ def build_context(bundle: ForecastBundle, rain: RainNowcast | None, prefs: UserP
             "temp_c": c.temperature, "feels_like_c": c.feels_like, "condition": c.condition_label,
             "humidity_pct": c.humidity, "wind_kmh": c.wind_speed, "gusts_kmh": c.wind_gusts,
             "wind_from_deg": c.wind_direction, "uv": c.uv_index, "visibility_km": c.visibility_km,
-            "cloud_pct": c.cloud_cover, "is_day": c.is_day,
+            "cloud_pct": c.cloud_cover, "is_day": c.is_day, "dew_point_c": c.dew_point,
+            "pressure_hpa": c.pressure, "pressure_trend_3h": c.pressure_trend,
+            "humidity_same_hour_yesterday_pct": c.humidity_yesterday,
+            "measured_by": (f"{c.observation.station} weather station, {c.observation.distance_km} km away, "
+                            f"{c.observation.age_min} min ago") if c.observation else "forecast model",
         },
         "rain_nowcast": None if rain is None else {
             "status": rain.status, "minutes_until_rain": rain.minutes_until,

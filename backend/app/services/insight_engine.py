@@ -17,7 +17,7 @@ from app.services.normalize import parse_local
 from app.utils.wmo import Condition, is_wet
 
 SEVERITY: dict[Condition, int] = {
-    "clear": 0, "mostly_clear": 1, "partly_cloudy": 2, "cloudy": 3, "fog": 4,
+    "clear": 0, "mostly_clear": 1, "partly_cloudy": 2, "cloudy": 3, "haze": 3, "fog": 4,
     "drizzle": 5, "snow": 6, "rain": 7, "heavy_rain": 8, "storm": 9,
 }
 RAIN_LIKELY = 50
@@ -79,6 +79,16 @@ def day_window(hourly: list[HourlyPoint], now: str, min_hours: int = 10) -> list
 
 def wet_hour(p: HourlyPoint) -> bool:
     return is_wet(p.condition) or (p.precipitation_probability or 0) >= RAIN_LIKELY
+
+
+def rain_phrase(p: HourlyPoint) -> str:
+    """Wording that never overstates the probability."""
+    prob = p.precipitation_probability or 0
+    if prob >= RAIN_LIKELY:
+        return "rain likely"
+    if prob >= RAIN_POSSIBLE or is_wet(p.condition):
+        return "showers possible"
+    return "should be dry"
 
 
 def peak_rain(points: Iterable[HourlyPoint]) -> HourlyPoint | None:
@@ -387,14 +397,12 @@ def personal_notes(window: list[HourlyPoint], prefs: UserPreferences | None, aq:
     if prefs.work and prefs.departure_time:
         p = hour_at(window, prefs.departure_time)
         if p:
-            state = "wet" if wet_hour(p) else "dry"
-            notes.append(f"Heading to {prefs.work} at {fmt_hour(p.time)}: {state}, {t(p.temperature)}, "
+            notes.append(f"Heading to {prefs.work} at {fmt_hour(p.time)}: {rain_phrase(p)}, {t(p.temperature)}, "
                          f"{pct(p.precipitation_probability)} rain chance.")
     if prefs.work and prefs.return_time:
         p = hour_at(window, prefs.return_time)
         if p:
-            state = "rain likely" if wet_hour(p) else "should be dry"
-            notes.append(f"Coming back at {fmt_hour(p.time)}: {state} ({pct(p.precipitation_probability)}).")
+            notes.append(f"Coming back at {fmt_hour(p.time)}: {rain_phrase(p)} ({pct(p.precipitation_probability)}).")
     return notes
 
 
@@ -404,7 +412,7 @@ PERIODS = (("Morning", 6, 11), ("Afternoon", 12, 16), ("Evening", 17, 20), ("Nig
 ADJ = {
     "Stormy": "stormy", "Rainy": "rainy", "Drizzly": "drizzly", "Misty": "misty", "Snowy": "snowy",
     "Hot": "hot", "Warm": "warm", "Comfortable": "comfortable", "Pleasant": "pleasant", "Cool": "cool",
-    "Cold": "cold", "Cooler": "cooler", "Clear": "clear", "Grey": "grey",
+    "Cold": "cold", "Cooler": "cooler", "Clear": "clear", "Grey": "grey", "Hazy": "hazy",
 }
 
 
@@ -435,8 +443,8 @@ def story_for(hourly_all: list[HourlyPoint], day: str) -> DailyStory:
                 cond = "rain"
         elif cond == "drizzle":
             word = "Drizzly"
-        elif cond == "fog":
-            word = "Misty"
+        elif cond in ("fog", "haze"):
+            word = "Misty" if cond == "fog" else "Hazy"
         elif cond == "snow":
             word = "Snowy"
         elif name == "Night" and afternoon_temp is not None and temp <= afternoon_temp - 3:

@@ -59,6 +59,12 @@ def _diurnal(hour: float, tmin: float, tmax: float) -> float:
     return tmin + (tmax - tmin) * (phase + 1) / 2
 
 
+def _dew_point(t: float, rh: float) -> float:
+    a, b = 17.625, 243.04
+    g = math.log(max(rh, 1) / 100) + a * t / (b + t)
+    return round(b * g / (a - g), 1)
+
+
 def _today_in_dhaka() -> datetime:
     return datetime.now(timezone(timedelta(seconds=DHAKA["utc_offset_seconds"]))).replace(tzinfo=None)
 
@@ -74,7 +80,7 @@ def build_payload(scenario: str) -> dict:
     hourly: dict[str, list] = {k: [] for k in (
         "time", "temperature_2m", "apparent_temperature", "precipitation_probability", "precipitation",
         "weather_code", "wind_speed_10m", "wind_direction_10m", "relative_humidity_2m", "uv_index",
-        "cloud_cover", "visibility", "is_day")}
+        "cloud_cover", "visibility", "is_day", "dew_point_2m", "pressure_msl")}
     for d in range(7):
         # later days drift towards a generic pattern so the week has variety
         day_plan = plan if d == 0 else _PLAN[("sunny", "cloudy", "rain", "sunny", "cloudy", "sunny")[(d + len(scenario)) % 6]]
@@ -104,6 +110,10 @@ def build_payload(scenario: str) -> dict:
             hourly["cloud_cover"].append({0: 5, 1: 20, 2: 45, 3: 90}.get(code, 95))
             hourly["visibility"].append(4_000 if code >= 95 else 8_000 if wet else 12_000 if scenario != "night" else 10_000)
             hourly["is_day"].append(is_day)
+            hourly["dew_point_2m"].append(_dew_point(temp, hum))
+            # storms arrive on a falling barometer
+            drop = max(0, h - 11) * 0.9 if (d == 0 and scenario == "storm" and h <= 17) else 0
+            hourly["pressure_msl"].append(round(1008.6 + 1.2 * math.sin((h - 10) / 12 * math.pi) - drop, 1))
 
     daily: dict[str, list] = {k: [] for k in (
         "time", "weather_code", "temperature_2m_max", "temperature_2m_min", "precipitation_probability_max",
@@ -141,6 +151,8 @@ def build_payload(scenario: str) -> dict:
         "uv_index": hourly["uv_index"][now_idx],
         "visibility": hourly["visibility"][now_idx],
     }
+    current["dew_point_2m"] = _dew_point(current["temperature_2m"], current["relative_humidity_2m"])
+    current["pressure_msl"] = hourly["pressure_msl"][now_idx]
     current["apparent_temperature"] = round(current["temperature_2m"] + max(0, (current["relative_humidity_2m"] - 40) * 0.09), 1)
     return {"latitude": DHAKA["latitude"], "longitude": DHAKA["longitude"], "timezone": DHAKA["timezone"],
             "utc_offset_seconds": DHAKA["utc_offset_seconds"], "current": current, "hourly": hourly, "daily": daily}

@@ -2,7 +2,7 @@
 from typing import Literal
 
 Condition = Literal[
-    "clear", "mostly_clear", "partly_cloudy", "cloudy", "fog", "drizzle",
+    "clear", "mostly_clear", "partly_cloudy", "cloudy", "haze", "fog", "drizzle",
     "rain", "heavy_rain", "snow", "storm",
 ]
 Scene = Literal["sunny", "cloudy", "rain", "storm", "night", "sunset", "snow", "fog"]
@@ -19,7 +19,7 @@ _CODE_TO_CONDITION: dict[int, Condition] = {
 
 _LABELS: dict[Condition, str] = {
     "clear": "Clear", "mostly_clear": "Mostly clear", "partly_cloudy": "Partly cloudy",
-    "cloudy": "Overcast", "fog": "Foggy", "drizzle": "Drizzle", "rain": "Rain",
+    "cloudy": "Overcast", "haze": "Haze", "fog": "Foggy", "drizzle": "Drizzle", "rain": "Rain",
     "heavy_rain": "Heavy rain", "snow": "Snow", "storm": "Thunderstorm",
 }
 _NIGHT_LABELS: dict[Condition, str] = {"clear": "Clear night", "mostly_clear": "Mostly clear"}
@@ -51,6 +51,8 @@ def scene_for(condition: Condition, is_day: bool, near_sun_edge: bool = False) -
         return "snow"
     if condition == "fog":
         return "fog"
+    if condition == "haze":
+        return "night" if not is_day else "fog"
     if not is_day:
         return "night"
     if near_sun_edge and condition != "cloudy":

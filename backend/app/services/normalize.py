@@ -47,8 +47,35 @@ def location_from(raw: dict, name: str | None, country: str | None, admin1: str 
     )
 
 
+def _hourly_value(raw: dict, var: str, ts: str, offset_h: int) -> float | None:
+    """Hourly `var` at the hour containing `ts` shifted by `offset_h` hours."""
+    h = raw.get("hourly", {})
+    times: list[str] = h.get("time", [])
+    key = ts[:13] + ":00"
+    if key not in times:
+        return None
+    i = times.index(key) + offset_h
+    return _at(h.get(var), i) if 0 <= i < len(times) else None
+
+
+def pressure_trend(change: float | None) -> str | None:
+    if change is None:
+        return None
+    if change <= -1.6:
+        return "falling_fast"
+    if change <= -0.5:
+        return "falling"
+    if change >= 1.6:
+        return "rising_fast"
+    if change >= 0.5:
+        return "rising"
+    return "steady"
+
+
 def current_from(raw: dict) -> CurrentWeather:
     c = raw["current"]
+    now_p, past_p = _hourly_value(raw, "pressure_msl", c["time"], 0), _hourly_value(raw, "pressure_msl", c["time"], -3)
+    change = round(now_p - past_p, 1) if now_p is not None and past_p is not None else None
     sun = _sun_table(raw.get("daily", {}))
     code = int(c.get("weather_code") or 0)
     cond = condition_for(code)
@@ -66,6 +93,10 @@ def current_from(raw: dict) -> CurrentWeather:
         visibility_km=round(vis / 1000, 1) if vis is not None else None,
         cloud_cover=c.get("cloud_cover"),
         pressure=c.get("pressure_msl"),
+        pressure_trend=pressure_trend(change),
+        pressure_change_3h=change,
+        dew_point=c.get("dew_point_2m"),
+        humidity_yesterday=_hourly_value(raw, "relative_humidity_2m", c["time"], -24),
         precipitation=c.get("precipitation"),
         weather_code=code,
         condition=cond,
@@ -103,6 +134,8 @@ def hourly_from(raw: dict) -> list[HourlyPoint]:
             uv_index=_at(h.get("uv_index"), i),
             cloud_cover=_at(h.get("cloud_cover"), i),
             visibility_km=round(vis / 1000, 1) if vis is not None else None,
+            dew_point=_at(h.get("dew_point_2m"), i),
+            pressure=_at(h.get("pressure_msl"), i),
             is_day=is_day,
         ))
     return out
@@ -110,8 +143,11 @@ def hourly_from(raw: dict) -> list[HourlyPoint]:
 
 def daily_from(raw: dict) -> list[DailyPoint]:
     d = raw.get("daily", {})
+    today = raw.get("current", {}).get("time", "")[:10]
     out: list[DailyPoint] = []
     for i, day in enumerate(d.get("time", [])):
+        if day < today:  # past_days=1 prepends yesterday
+            continue
         tmax, tmin = _at(d.get("temperature_2m_max"), i), _at(d.get("temperature_2m_min"), i)
         if tmax is None or tmin is None:
             continue
