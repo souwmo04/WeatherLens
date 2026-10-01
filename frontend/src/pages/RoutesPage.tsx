@@ -1,4 +1,5 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowDownUp, Clock, Loader2, MapPin, Navigation, Sparkles } from "lucide-react";
 import { PageFrame } from "@/layout/AppLayout";
@@ -24,10 +25,12 @@ function nowHHMM() {
 export default function RoutesPage() {
   const { prefs, resolvedTheme } = useApp();
   const place = useActivePlace();
-  const [from, setFrom] = useState(prefs.home || "");
-  const [to, setTo] = useState(prefs.work || "");
+  const [params] = useSearchParams();
+  // Shareable links: /routes?from=Uttara&to=Gulshan&depart=09:00
+  const [from, setFrom] = useState(params.get("from") || prefs.home || "");
+  const [to, setTo] = useState(params.get("to") || prefs.work || "");
   const [mode, setMode] = useState<"depart" | "arrive">("depart");
-  const [time, setTime] = useState(prefs.departure_time || nowHHMM());
+  const [time, setTime] = useState(params.get("depart") || prefs.departure_time || nowHHMM());
   const [route, setRoute] = useState<RouteWeather | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,6 +44,15 @@ export default function RoutesPage() {
       setError(e as ApiError); setRoute(null);
     } finally { setLoading(false); }
   };
+
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (!autoRan.current && params.get("from") && params.get("to")) {
+      autoRan.current = true;
+      void run(params.get("from")!, params.get("to")!);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const field = "h-12 w-full rounded-2xl border border-line bg-bg px-4 text-[0.97rem] text-ink outline-none transition-colors placeholder:text-ink-mute focus:border-line-strong";
 
